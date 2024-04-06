@@ -9,6 +9,15 @@ export const handler = NextAuth({
         }),
         // ...add more providers here
     ],
+    callbacks: {
+        async session({ session, token }) {
+            let userData: any = session.user ?? '';
+            userData.username = session.user?.name?.split(' ').join('').toLocaleLowerCase();
+            userData.uid = token.sub;
+            session.user = userData;
+            return session;
+        }
+    }
 });
 export { handler as GET, handler as POST };
 

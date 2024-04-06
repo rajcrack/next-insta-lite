@@ -9,15 +9,21 @@ import { HiCamera } from 'react-icons/hi';
 import { AiOutlineClose } from 'react-icons/ai';
 import { UploadTask, getDownloadURL, getStorage, ref, uploadBytesResumable } from 'firebase/storage';
 import { app } from '@/firebase';
-import { error } from 'console';
+import { error, profile, timeStamp } from 'console';
+import { addDoc, collection, getFirestore, serverTimestamp } from 'firebase/firestore';
 
 export default function Header() {
     const [isOpen, setIsOpen] = useState(false);
     const { data: session } = useSession();
-
+    console.log(session);
     const [selectedFile, setSelectedFile] = useState<any>(null);
     const [imageFileUrl, setImageFileUrl] = useState<any>(null);
+    const [caption, setCaption] = useState('');
+    // loading 
     const [isIMageUploading, setIsIMageUploading] = useState(false);
+    const [postUploading, setPostUploading] = useState(false);
+
+    const db = getFirestore(app);
 
 
     // references
@@ -65,6 +71,23 @@ export default function Header() {
         );
     }
 
+    const handleSubmit = async () => {
+        setPostUploading(true);
+
+        console.log('submit requiest called');
+        let userData: any = session?.user;
+        const docRef = await addDoc(collection(db, 'posts'), {
+
+            username: userData.username,
+            caption,
+            profileImg: userData.image,
+            img: imageFileUrl,
+            timeStamp: serverTimestamp()
+        });
+        setPostUploading(false);
+        setIsOpen(false);
+    }
+
     return (
         <div className='shadow-sm border-b sticky top-0 bg-white z-30 p-3'>
             <div className='flex justify-between items-center max-w-6xl mx-auto'>
@@ -93,15 +116,43 @@ export default function Header() {
             {isOpen && (<Modal
                 onRequestClose={() => setIsOpen(false)}
                 ariaHideApp={false}
-                isOpen={isOpen} className='max-w-lg w-[90%] p-6 absolute top-56 left-[50%] translate-x-[-50%] bg-white rounded-md shadow-md outline-none border-[0.5px] border-gray-200' >
+                isOpen={isOpen}
+                className='max-w-lg w-[90%] p-6 absolute top-56 left-[50%] translate-x-[-50%] bg-white rounded-md shadow-md outline-none border-[0.5px] border-gray-200' >
                 <div className='flex flex-col justify-center items-center h-[100%]'>
-                    {selectedFile ? (<img onClick={() => filePickerRef?.current?.click()} src={imageFileUrl} alt='selected Imaage' className={`${isIMageUploading && ' animate-pulse'}  w-full max-h-[250px] object-cover cursor-pointer`} />) :
-                        (<HiCamera onClick={() => filePickerRef?.current?.click()} className='text-5xl text-gray-400 cursor-pointer' />)}
-                    <input hidden ref={filePickerRef} type="file" accept='image/*' name="image" onChange={addImageToPost} />
+                    {selectedFile ? (
+                        <img
+                            onClick={() => filePickerRef?.current?.click()}
+                            src={imageFileUrl}
+                            alt='selected Imaage'
+                            className={`${isIMageUploading && ' animate-pulse'} w-full max-h-[250px] object-cover cursor-pointer`} />) :
+                        (
+                            <HiCamera
+                                onClick={() => filePickerRef?.current?.click()}
+                                className='text-5xl text-gray-400 cursor-pointer'
+                            />)}
+                    <input
+                        hidden ref={filePickerRef}
+                        type="file" accept='image/*' name="image"
+                        onChange={addImageToPost} />
                 </div>
-                <input type="text" maxLength={150} placeholder='Please Enter your Caption...' className='m-4 active:border-none border-none text-center w-full focus:ring-0 outline-none' />
-                <button className='w-full bg-red-600 text-white p-2 shadow-md rounded-lg hover:brightness-105 disabled:bg-gray-200 disabled:cursor-not-allowed disabled:hover:brightness-100'>Upload Post</button>
-                <AiOutlineClose className='cursor-pointer absolute top-2 right-2 hover:text-red-600 transition duration-300' onClick={() => setIsOpen(false)} />
+                <input
+                    type="text"
+                    maxLength={150}
+                    placeholder='Please Enter your Caption...'
+                    className='m-4 active:border-none border-none text-center w-full focus:ring-0 outline-none'
+                    onChange={(e) => setCaption(e.target.value)}
+                />
+                <button
+                    disabled={
+                        !selectedFile || caption.trim().length < 10 || postUploading || isIMageUploading
+                    }
+                    onClick={handleSubmit}
+                    className='w-full bg-red-600 text-white p-2 shadow-md rounded-lg hover:brightness-105 disabled:bg-gray-200 disabled:cursor-not-allowed disabled:hover:brightness-100'>Upload Post
+                </button>
+                <AiOutlineClose
+                    className='cursor-pointer absolute top-2 right-2 hover:text-red-600 transition duration-300'
+                    onClick={() => setIsOpen(false)}
+                />
             </Modal>)}
         </div>
     )
