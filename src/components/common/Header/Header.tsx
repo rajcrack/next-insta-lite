@@ -15,7 +15,6 @@ import { addDoc, collection, getFirestore, serverTimestamp } from 'firebase/fire
 export default function Header() {
     const [isOpen, setIsOpen] = useState(false);
     const { data: session } = useSession();
-    console.log(session);
     const [selectedFile, setSelectedFile] = useState<any>(null);
     const [imageFileUrl, setImageFileUrl] = useState<any>(null);
     const [caption, setCaption] = useState('');
@@ -34,8 +33,6 @@ export default function Header() {
         if (file) {
             setSelectedFile(file);
             setImageFileUrl(URL.createObjectURL(file));
-
-            console.log(imageFileUrl);
         }
     }
 
@@ -54,10 +51,8 @@ export default function Header() {
         uploadTask.on(
             'state_changed', (snapshot) => {
                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                console.log(progress + ' % done');
             },
             (error) => {
-                console.log("firebase ending error", error);
                 setIsIMageUploading(false);
                 setImageFileUrl(null);
                 setSelectedFile(null);
@@ -73,7 +68,6 @@ export default function Header() {
 
     const handleSubmit = async () => {
         setPostUploading(true);
-
         console.log('submit requiest called');
         let userData: any = session?.user;
         const docRef = await addDoc(collection(db, 'posts'), {
@@ -86,6 +80,7 @@ export default function Header() {
         });
         setPostUploading(false);
         setIsOpen(false);
+        location.reload();
     }
 
     return (
