@@ -1,6 +1,7 @@
 import React from 'react'
 import { HiOutlineDotsVertical } from 'react-icons/hi'
 import LikeSection from './LikeSection'
+import CommentSection from './CommentSection'
 export default function Post({ post }: {
     post: {
         caption?: string,
@@ -22,10 +23,11 @@ export default function Post({ post }: {
             {/* post Image */}
             <div>
                 <img src={post.img} alt={post.caption} className='object-cover w-full max-h-[450px]' />
+                <LikeSection id={post.id} />
                 <p className='p-5 truncate'>
                     <span className='font-bold mr-2'>{post.username}</span>{post.caption}</p>
+                <CommentSection id={post.id} />
             </div>
-            <LikeSection id={post.id} />
 
         </div>
     )
